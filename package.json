@@ -1,6 +1,6 @@
 {
   "name": "@webreflection/group-nodes",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "exports": {
     ".": "./src/index.js",
@@ -15,7 +15,10 @@
     "type": "git",
     "url": "git+https://github.com/WebReflection/group-nodes.git"
   },
-  "keywords": ["fragment", "persistent"],
+  "keywords": [
+    "fragment",
+    "persistent"
+  ],
   "author": "Andrea Giammarchi",
   "license": "MIT",
   "bugs": {
