@@ -18,9 +18,6 @@ import {
   start,
 } from './utils.js';
 
-const OPEN = '<>';
-const CLOSE = '</>';
-
 const NLP = NodeList.prototype;
 
 const owned = new WeakSet;
@@ -107,9 +104,6 @@ export const asChildren = (children, patch = false) => {
 export const asTarget = node => isGroupNodes(node) ? start(node) : node;
 
 export class GroupNodes extends DocumentFragment {
-  static get BOUNDARY_OPEN() { return OPEN }
-  static get BOUNDARY_CLOSE() { return CLOSE }
-
   /**
    * ℹ️ hydration related
    * Create a GroupNodes reference from 2 live comments as long
@@ -117,11 +111,12 @@ export class GroupNodes extends DocumentFragment {
    * Reason: GroupNodes should be unique just like ShadowRoots per each node.
    * @param {Comment} start
    * @param {Comment} end
+   * @param {string} name
    * @returns {GroupNodes}
    */
-  static from(start, end) {
-    validate(start, OPEN);
-    validate(end, CLOSE);
+  static from(start, end, name = '') {
+    validate(start, `<${name}>`);
+    validate(end, `</${name}>`);
     if (owned.has(start) || owned.has(end))
       throw new Error('Boundaries can be used only once per GroupNodes');
     const nodes = boundaries(start, end);
@@ -135,17 +130,21 @@ export class GroupNodes extends DocumentFragment {
     return groupNodes;
   }
 
-  constructor() {
-    const start = document.createComment(OPEN);
-    const end = document.createComment(CLOSE);
+  /**
+   * @param {string} name the group name
+   */
+  constructor(name = '') {
+    const start = document.createComment(`<${name}>`);
+    const end = document.createComment(`</${name}>`);
     owned.add(start).add(end);
-    super();
+    //@ts-ignore
+    super().name = name;
     comments.set(this, boundaries(start, end));
   }
 
   // accessors
   get [Symbol.toStringTag]() {
-    return 'GroupNodes';
+    return `GroupNodes<${this.name}>`;
   }
 
   /** @type {number} */
