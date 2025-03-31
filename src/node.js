@@ -1,3 +1,5 @@
+//@ts-check
+
 import {
   NP,
   defineProperties,
@@ -16,38 +18,45 @@ import { asGroupNodes, asTarget, isGroupNodes } from './group-nodes.js';
 
 defineProperties(NP, {
   appendChild: {
-    value(child) {
-      return appendChild.call(this, asGroupNodes(child));
+    /** @type {typeof Node.prototype.appendChild} */
+    value(node) {
+      return appendChild.call(this, asGroupNodes(node));
     }
   },
   compareDocumentPosition: {
-    value(node) {
-      return compareDocumentPosition.call(this, asTarget(node));
+    /** @type {typeof Node.prototype.compareDocumentPosition} */
+    value(other) {
+      return compareDocumentPosition.call(this, asTarget(other));
     }
   },
   contains: {
-    value(node) {
-      return contains.call(this, asTarget(node));
+    /** @type {typeof Node.prototype.contains} */
+    value(other) {
+      return contains.call(this, asTarget(other));
     }
   },
   insertBefore: {
-    value(newNode, referenceNode) {
-      return insertBefore.call(this, asGroupNodes(newNode), asTarget(referenceNode));
+    /** @type {typeof Node.prototype.insertBefore} */
+    value(node, child) {
+      return insertBefore.call(this, asGroupNodes(node), asTarget(child));
     }
   },
   removeChild: {
+    /** @type {typeof Node.prototype.removeChild} */
     value(child) {
       return isGroupNodes(child) ? detach(child) : removeChild.call(this, child);
     }
   },
   replaceChild: {
-    value(newChild, oldChild) {
-      if (isGroupNodes(oldChild)) {
-        insertBefore.call(this, helper, start(oldChild));
-        detach(oldChild);
-        oldChild = helper;
+    /** @type {typeof Node.prototype.replaceChild} */
+    value(node, child) {
+      if (isGroupNodes(child)) {
+        insertBefore.call(this, helper, start(child));
+        detach(child);
+        //@ts-ignore
+        child = helper;
       }
-      return replaceChild.call(this, asGroupNodes(newChild), oldChild);
+      return replaceChild.call(this, asGroupNodes(node), child);
     }
   },
 });

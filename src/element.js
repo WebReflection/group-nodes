@@ -1,3 +1,5 @@
+//@ts-check
+
 import { defineProperties } from './utils.js';
 
 import { asChildren, asGroupNodes, asTarget } from './group-nodes.js';
@@ -9,56 +11,69 @@ const {
   append,
   before,
   insertAdjacentElement,
-  moveBefore,
   prepend,
   replaceChildren,
   replaceWith,
+  //@ts-ignore
+  moveBefore,
 } = EP;
 
 defineProperties(EP, {
   after: {
-    value(...children) {
-      after.apply(this, asChildren(children));
+    /** @type {typeof Element.prototype.after} */
+    value(...nodes) {
+      after.apply(this, asChildren(nodes));
     }
   },
   append: {
-    value(...children) {
-      append.apply(this, asChildren(children));
+    /** @type {typeof Element.prototype.append} */
+    value(...nodes) {
+      append.apply(this, asChildren(nodes));
     }
   },
   before: {
-    value(...children) {
-      before.apply(this, asChildren(children));
+    /** @type {typeof Element.prototype.before} */
+    value(...nodes) {
+      before.apply(this, asChildren(nodes));
     }
   },
   insertAdjacentElement: {
+    /** @type {typeof Element.prototype.insertAdjacentElement} */
     value(position, element) {
-      insertAdjacentElement.call(this, position, asGroupNodes(element));
-      return element;
+      return insertAdjacentElement.call(this, position, asGroupNodes(element));
     }
   },
   moveBefore: {
-    value(liveNode, referenceNode) {
+    /**
+     * @template {Node} T
+     * @param {T} movedNode
+     * @param {Node | null} referenceNode
+     * @returns {T}
+     */
+    value(movedNode, referenceNode) {
       return moveBefore.call(
         this,
-        asGroupNodes(liveNode),
+        asGroupNodes(movedNode),
         asTarget(referenceNode),
       );
     }
   },
   prepend: {
-    value(...children) {
-      prepend.apply(this, asChildren(children));
+    /** @type {typeof Element.prototype.prepend} */
+    value(...nodes) {
+      prepend.apply(this, asChildren(nodes));
     }
   },
   replaceChildren: {
-    value(...children) {
-      replaceChildren.apply(this, asChildren(children));
+    /** @type {typeof Element.prototype.replaceChildren} */
+    value(...nodes) {
+      replaceChildren.apply(this, asChildren(nodes));
     }
   },
   replaceWith: {
-    value(...children) {
-      replaceWith.apply(this, asChildren(children));
+    /** @type {typeof Element.prototype.replaceWith} */
+    value(...nodes) {
+      replaceWith.apply(this, asChildren(nodes));
     }
   },
 });

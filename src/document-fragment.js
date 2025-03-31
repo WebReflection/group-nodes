@@ -1,3 +1,4 @@
+//@ts-check
 
 import {
   DFP,
@@ -12,27 +13,36 @@ import { asGroupNodes, asChildren, asTarget } from './group-nodes.js';
 
 defineProperties(DFP, {
   append: {
-    value(...children) {
-      append.apply(this, asChildren(children));
+    /** @type {typeof DocumentFragment.prototype.append} */
+    value(...nodes) {
+      append.apply(this, asChildren(nodes));
     }
   },
   moveBefore: {
-    value(liveNode, referenceNode) {
+    /**
+     * @template {Node} T
+     * @param {T} movedNode
+     * @param {Node | null} referenceNode
+     * @returns {T}
+     */
+    value(movedNode, referenceNode) {
       return moveBefore.call(
         this,
-        asGroupNodes(liveNode),
+        asGroupNodes(movedNode),
         asTarget(referenceNode),
       );
     }
   },
   prepend: {
-    value(...children) {
-      prepend.apply(this, asChildren(children));
+    /** @type {typeof DocumentFragment.prototype.prepend} */
+    value(...nodes) {
+      prepend.apply(this, asChildren(nodes));
     }
   },
   replaceChildren: {
-    value(...children) {
-      replaceChildren.apply(this, asChildren(children));
+    /** @type {typeof DocumentFragment.prototype.replaceChildren} */
+    value(...nodes) {
+      replaceChildren.apply(this, asChildren(nodes));
     }
   },
 });

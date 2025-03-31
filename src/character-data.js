@@ -1,3 +1,5 @@
+//@ts-check
+
 import { defineProperties } from './utils.js';
 
 import { asChildren } from './group-nodes.js';
@@ -8,18 +10,21 @@ const { after, before, replaceWith } = CDP;
 
 defineProperties(CDP, {
   after: {
-    value(...children) {
-      after.apply(this, asChildren(children));
+    /** @type {typeof CharacterData.prototype.after} */
+    value(...nodes) {
+      after.apply(this, asChildren(nodes));
     }
   },
   before: {
-    value(...children) {
-      before.apply(this, asChildren(children));
+    /** @type {typeof CharacterData.prototype.before} */
+    value(...nodes) {
+      before.apply(this, asChildren(nodes));
     }
   },
   replaceWith: {
-    value(...children) {
-      replaceWith.apply(this, asChildren(children));
+    /** @type {typeof CharacterData.prototype.replaceWith} */
+    value(...nodes) {
+      replaceWith.apply(this, asChildren(nodes));
     }
   },
 });

@@ -14,11 +14,8 @@ export {
   setPrototypeOf,
 };
 
-const NLP = NodeList.prototype;
 export const DFP = DocumentFragment.prototype;
 export const NP = Node.prototype;
-export const EP = Element.prototype;
-export const RP = Range.prototype;
 
 const handler = { get: (proto, name) => getOwnPropertyDescriptor(proto, name).get };
 
@@ -31,7 +28,7 @@ export { append, moveBefore, prepend, replaceChildren };
 export const comments = new WeakMap;
 export const helper = document.createComment('');
 
-export const getters = proto => new Proxy(proto, handler);
+const getters = proto => new Proxy(proto, handler);
 const { nextSibling, previousSibling } = getters(NP);
 export { nextSibling, previousSibling };
 
@@ -56,8 +53,6 @@ export const asContent = (groupNodes, boundaries = comments.get(groupNodes)) => 
   }
   return groupNodes;
 };
-
-export const asNodeList = nodes => setPrototypeOf(nodes, NLP);
 
 export const attached = ({ start, end }) => {
   const { parentNode } = start;
