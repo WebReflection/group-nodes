@@ -1,8 +1,8 @@
 //@ts-check
 
-import { defineProperties } from './utils.js';
+import { defineProperties } from '../lib/utils.js';
 
-import { asChildren, asGroupNodes, asTarget } from './group-nodes.js';
+import { asChildren, asGroupNodes, asTarget } from '../lib/group-nodes.js';
 
 const EP = Element.prototype;
 

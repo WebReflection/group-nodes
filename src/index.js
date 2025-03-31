@@ -1,5 +1,5 @@
-export { GroupNodes } from './group-nodes.js';
-import './document-fragment.js';
-import './character-data.js';
-import './element.js';
-import './node.js';
+export { GroupNodes } from './lib/group-nodes.js';
+import './patch/document-fragment.js';
+import './patch/character-data.js';
+import './patch/element.js';
+import './patch/node.js';
