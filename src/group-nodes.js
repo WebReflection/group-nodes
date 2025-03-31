@@ -15,7 +15,6 @@ import {
   removeChild,
   replaceChild,
   start,
-  target,
 } from './utils.js';
 
 const OPEN = '<>';
@@ -55,6 +54,8 @@ export const asChildren = children => {
   }
   return children;
 };
+
+export const asTarget = node => isGroupNodes(node) ? start(node) : node;
 
 export class GroupNodes extends DocumentFragment {
   /**
@@ -202,14 +203,14 @@ export class GroupNodes extends DocumentFragment {
     const nodes = comments.get(this);
     return attached(nodes) ?
       parent(nodes, 'compareDocumentPosition', child) :
-      super.compareDocumentPosition(target(child))
+      super.compareDocumentPosition(asTarget(child))
     ;
   }
   contains(child) {
     const nodes = comments.get(this);
     return attached(nodes) ?
       parent(nodes, 'contains', child) :
-      super.contains(target(child))
+      super.contains(asTarget(child))
     ;
   }
   getRootNode(...args) {
@@ -230,7 +231,7 @@ export class GroupNodes extends DocumentFragment {
     const nodes = comments.get(this);
     return attached(nodes) ?
       parent(nodes, 'insertBefore', newNode, referenceNode) :
-      super.insertBefore(asGroupNodes(newNode), target(referenceNode))
+      super.insertBefore(asGroupNodes(newNode), asTarget(referenceNode))
     ;
   }
   removeChild(child) {

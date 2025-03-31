@@ -19,3 +19,8 @@ const clone = hydrated.cloneNode(true);
 
 document.body.append(clone);
 
+const another = new GroupNodes;
+another.append(document.createElement('hr'), document.createElement('hr'));
+
+document.body.insertBefore(another, clone);
+

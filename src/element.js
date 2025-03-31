@@ -1,6 +1,6 @@
-import { defineProperties, target } from './utils.js';
+import { defineProperties } from './utils.js';
 
-import { asChildren, asGroupNodes } from './group-nodes.js';
+import { asChildren, asGroupNodes, asTarget } from './group-nodes.js';
 
 const EP = Element.prototype;
 
@@ -42,7 +42,7 @@ defineProperties(EP, {
       return moveBefore.call(
         this,
         asGroupNodes(liveNode),
-        target(referenceNode),
+        asTarget(referenceNode),
       );
     }
   },

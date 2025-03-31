@@ -80,5 +80,3 @@ export const detach = (groupNodes, boundaries = comments.get(groupNodes)) => {
 };
 
 export const start = node => comments.get(node).start;
-
-export const target = node => isGroupNodes(node) ? start(node) : node;

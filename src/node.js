@@ -4,7 +4,6 @@ import {
   detach,
   helper,
   start,
-  target,
   appendChild,
   compareDocumentPosition,
   contains,
@@ -13,7 +12,7 @@ import {
   replaceChild,
 } from './utils.js';
 
-import { asGroupNodes, isGroupNodes } from './group-nodes.js';
+import { asGroupNodes, asTarget, isGroupNodes } from './group-nodes.js';
 
 defineProperties(NP, {
   appendChild: {
@@ -23,17 +22,17 @@ defineProperties(NP, {
   },
   compareDocumentPosition: {
     value(node) {
-      return compareDocumentPosition.call(this, target(node));
+      return compareDocumentPosition.call(this, asTarget(node));
     }
   },
   contains: {
     value(node) {
-      return contains.call(this, target(node));
+      return contains.call(this, asTarget(node));
     }
   },
   insertBefore: {
     value(newNode, referenceNode) {
-      return insertBefore.call(this, asGroupNodes(newNode), target(referenceNode));
+      return insertBefore.call(this, asGroupNodes(newNode), asTarget(referenceNode));
     }
   },
   removeChild: {

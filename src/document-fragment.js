@@ -2,14 +2,13 @@
 import {
   DFP,
   defineProperties,
-  target,
   append,
   moveBefore,
   prepend,
   replaceChildren,
 } from './utils.js';
 
-import { asGroupNodes, asChildren } from './group-nodes.js';
+import { asGroupNodes, asChildren, asTarget } from './group-nodes.js';
 
 defineProperties(DFP, {
   append: {
@@ -22,7 +21,7 @@ defineProperties(DFP, {
       return moveBefore.call(
         this,
         asGroupNodes(liveNode),
-        target(referenceNode),
+        asTarget(referenceNode),
       );
     }
   },
