@@ -313,4 +313,28 @@ export class GroupNodes extends DocumentFragment {
     }
     else super.replaceChildren(...children);
   }
+
+  // Extra (convenient) methods
+  after(...children) {
+    const nodes = comments.get(this);
+    if (attached(nodes))
+      nodes.end.after(...children);
+  }
+  before(...children) {
+    const nodes = comments.get(this);
+    if (attached(nodes))
+      nodes.start.before(...children);
+  }
+  remove() {
+    this.parentNode?.removeChild(this);
+  }
+  replaceWith(...children) {
+    const nodes = comments.get(this);
+    const { parentNode } = nodes.start;
+    if (parentNode) {
+      insertBefore.call(parentNode, helper, nodes.start);
+      detach(this, nodes);
+      helper.replaceWith(...children);
+    }
+  }
 }
