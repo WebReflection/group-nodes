@@ -6,7 +6,7 @@
     ".": "./src/index.js",
     "./package.json": "./package.json"
   },
-  "description": "An DocumentPersistentFragment alternative, solely based on a weak relation between a fragment and its comments' boundaries",
+  "description": "A DocumentPersistentFragment alternative, solely based on a weak relation between a fragment and its comments' boundaries",
   "main": "./src/index.js",
   "module": "./src/index.js",
   "scripts": {

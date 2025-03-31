@@ -1,6 +1,6 @@
 # GroupNodes
 
-An *DocumentPersistentFragment* alternative, solely based on a weak relation between a fragment and its *comments*' boundaries.
+A *DocumentPersistentFragment* alternative, solely based on a weak relation between a fragment and its *comments*' boundaries.
 
 ```js
 import { GroupNodes } from 'https://esm.run/@webreflection/group-nodes';
