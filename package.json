@@ -8,6 +8,7 @@
   },
   "description": "An DocumentPersistentFragment alternative, solely based on a weak relation between a fragment and its comments' boundaries",
   "main": "./src/index.js",
+  "module": "./src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

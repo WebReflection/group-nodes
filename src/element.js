@@ -2,7 +2,7 @@ import { defineProperties, target } from './utils.js';
 
 import { asChildren, asGroupNodes } from './group-nodes.js';
 
-const EP = CharacterData.prototype;
+const EP = Element.prototype;
 
 const {
   after,
