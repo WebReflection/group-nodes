@@ -1,102 +1,106 @@
 import { GroupNodes } from '../src/index.js';
 
+const assert = ok => {
+  if (!ok) throw new Error('not OK');
+};
+
 document.body.innerHTML = document.body.innerHTML.trim();
 const { firstChild, lastChild } = document.body;
 
 const hydrated = GroupNodes.from(firstChild, lastChild);
 
-console.assert(hydrated.hasChildNodes());
-console.assert(hydrated.childNodes.length === 3);
-console.assert(document.body.contains(hydrated));
+assert(hydrated.hasChildNodes());
+assert(hydrated.childNodes.length === 3);
+assert(document.body.contains(hydrated));
 
 try {
   GroupNodes.from(firstChild, lastChild);
-  console.assert(false);
+  assert(false);
 }
 catch ({ message }) {
   console.log('ℹ️', message);
 }
 
 const clone = hydrated.cloneNode(true);
-console.assert(clone.hasChildNodes());
-console.assert(clone.parentNode === null);
-console.assert(clone.parentElement === null);
+assert(clone.hasChildNodes());
+assert(clone.parentNode === null);
+assert(clone.parentElement === null);
 
 document.body.appendChild(clone);
-console.assert(clone.parentNode === document.body);
-console.assert(clone.parentElement === document.body);
+assert(clone.parentNode === document.body);
+assert(clone.parentElement === document.body);
 
 const another = new GroupNodes;
-console.assert(!another.hasChildNodes());
+assert(!another.hasChildNodes());
 another.append(document.createElement('hr'), document.createElement('hr'));
 
 document.body.insertBefore(another, clone);
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><hr><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><hr><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
 
 another.append(hydrated);
-console.assert(document.body.outerHTML === '<body><!--<>--><hr><hr><!--<>-->a<hr>b<!--</>--><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>--><hr><hr><!--<>-->a<hr>b<!--</>--><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
 
 clone.prepend(another);
-console.assert(document.body.outerHTML === '<body><!--<>--><!--<>--><hr><hr><!--<>-->a<hr>b<!--</>--><!--</>-->a<hr>b<!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>--><!--<>--><hr><hr><!--<>-->a<hr>b<!--</>--><!--</>-->a<hr>b<!--</>--></body>');
 
 clone.append(another);
 document.body.append(another, hydrated);
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><hr><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><hr><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
 
 document.body.removeChild(another);
 another.removeChild(another.firstChild);
 hydrated.append(another);
 document.body.removeChild(hydrated);
-console.assert(hydrated.parentNode === null);
-console.assert(hydrated.parentElement === null);
-console.assert(another.parentNode === hydrated);
-console.assert(another.parentElement === null);
+assert(hydrated.parentNode === null);
+assert(hydrated.parentElement === null);
+assert(another.parentNode === hydrated);
+assert(another.parentElement === null);
 document.body.append(another, hydrated);
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><!--</>--><!--<>-->a<hr>b<!--</>--></body>');
 
 another.remove();
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>-->a<hr>b<!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>-->a<hr>b<!--</>--></body>');
 
 const p = document.createElement('p');
 p.textContent = '!';
 
 hydrated.replaceWith(p);
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><p>!</p></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><p>!</p></body>');
 
 clone.before(another);
-console.assert(document.body.outerHTML === '<body><!--<>--><hr><!--</>--><!--<>-->a<hr>b<!--</>--><p>!</p></body>');
+assert(document.body.outerHTML === '<body><!--<>--><hr><!--</>--><!--<>-->a<hr>b<!--</>--><p>!</p></body>');
 
 clone.after(another);
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><!--</>--><p>!</p></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><!--</>--><p>!</p></body>');
 
 p.after(another);
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><p>!</p><!--<>--><hr><!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><p>!</p><!--<>--><hr><!--</>--></body>');
 
-console.assert(clone.isConnected);
-console.assert(another.isConnected);
-console.assert(!hydrated.isConnected);
+assert(clone.isConnected);
+assert(another.isConnected);
+assert(!hydrated.isConnected);
 
 hydrated.replaceChildren(p);
-console.assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>-->a<hr>b<!--</>--><!--<>--><hr><!--</>--></body>');
 
 clone.replaceChildren(p);
-console.assert(document.body.outerHTML === '<body><!--<>--><p>!</p><!--</>--><!--<>--><hr><!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>--><p>!</p><!--</>--><!--<>--><hr><!--</>--></body>');
 
-console.assert(!hydrated.hasChildNodes());
+assert(!hydrated.hasChildNodes());
 hydrated.replaceChildren(clone);
-console.assert(hydrated.contains(clone));
-console.assert(document.body.outerHTML === '<body><!--<>--><hr><!--</>--></body>');
+assert(hydrated.contains(clone));
+assert(document.body.outerHTML === '<body><!--<>--><hr><!--</>--></body>');
 
 another.replaceChildren(hydrated);
-console.assert(document.body.outerHTML === '<body><!--<>--><!--<>--><!--<>--><p>!</p><!--</>--><!--</>--><!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>--><!--<>--><!--<>--><p>!</p><!--</>--><!--</>--><!--</>--></body>');
 
 document.body.replaceChildren(hydrated, clone, another);
-console.assert(document.body.outerHTML === '<body><!--<>--><!--</>--><!--<>--><p>!</p><!--</>--><!--<>--><!--</>--></body>');
+assert(document.body.outerHTML === '<body><!--<>--><!--</>--><!--<>--><p>!</p><!--</>--><!--<>--><!--</>--></body>');
 
 const named = new GroupNodes('Named');
 named.appendChild(document.createElement('hr'));
 
-console.assert({}.toString.call(document.body.appendChild(named)) === '[object GroupNodes<Named>]');
+assert({}.toString.call(document.body.appendChild(named)) === '[object GroupNodes<Named>]');
 
 document.body.innerHTML = '<!--<>--><!--</>--><!--<HR>--><hr><!--</HR>-->';
 
@@ -107,16 +111,16 @@ range.setStartBefore(childNodes[0]);
 range.setEndAfter(childNodes[1]);
 
 const aGroupHasNoName = range.groupNodes();
-console.assert({}.toString.call(aGroupHasNoName) === '[object GroupNodes<>]');
+assert({}.toString.call(aGroupHasNoName) === '[object GroupNodes<>]');
 
 
 range.setStartBefore(childNodes[2]);
 range.setEndAfter(childNodes[4]);
 
 const anHRGroup = range.groupNodes();
-console.assert({}.toString.call(anHRGroup) === '[object GroupNodes<HR>]');
+assert({}.toString.call(anHRGroup) === '[object GroupNodes<HR>]');
 
-console.assert(anHRGroup.nodeName === '#group-nodes');
+assert(anHRGroup.nodeName === '#group-nodes');
 
 document.body.replaceChildren(document.createTextNode('<GroupNodes /> 🥳'));
 document.body.classList.add('done');

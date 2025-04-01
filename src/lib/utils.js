@@ -8,6 +8,9 @@ export {
   defineProperties,
 };
 
+export const symbol = Symbol.for('group-nodes');
+export const patched = symbol in globalThis;
+
 const NLP = NodeList.prototype;
 export const DFP = DocumentFragment.prototype;
 export const NP = Node.prototype;

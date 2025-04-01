@@ -14,6 +14,8 @@ import {
   replaceChild,
   replaceChildren,
   start,
+  symbol,
+  patched,
 } from './utils.js';
 
 const owned = new WeakSet;
@@ -95,7 +97,7 @@ export const asTarget = node => isGroupNodes(node) ? start(node) : node;
 
 let fromBoundaries = null;
 
-export class GroupNodes extends DocumentFragment {
+class GroupNodes extends DocumentFragment {
   #name = '';
 
   /**
@@ -422,3 +424,7 @@ export class GroupNodes extends DocumentFragment {
     }
   }
 }
+
+const GN = patched ? globalThis[symbol] : (globalThis[symbol] = GroupNodes);
+
+export { GN as GroupNodes };
