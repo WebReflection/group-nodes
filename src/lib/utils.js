@@ -1,23 +1,22 @@
 const {
-  create,
   defineProperties,
   getOwnPropertyDescriptor,
-  getPrototypeOf,
   setPrototypeOf,
 } = Object;
 
 export {
-  create,
   defineProperties,
-  getOwnPropertyDescriptor,
-  getPrototypeOf,
-  setPrototypeOf,
 };
 
+const NLP = NodeList.prototype;
 export const DFP = DocumentFragment.prototype;
 export const NP = Node.prototype;
 
-const handler = { get: (proto, name) => getOwnPropertyDescriptor(proto, name).get };
+/**
+ * @param {Node[]} nodes
+ * @returns {NodeList}
+ */
+export const asNodeList = nodes => setPrototypeOf(nodes, NLP);
 
 const { appendChild, compareDocumentPosition, contains, insertBefore, removeChild, replaceChild } = NP;
 export { appendChild, compareDocumentPosition, contains, insertBefore, removeChild, replaceChild };
@@ -28,9 +27,7 @@ export { append, moveBefore, prepend, replaceChildren };
 export const comments = new WeakMap;
 export const helper = document.createComment('');
 
-const getters = proto => new Proxy(proto, handler);
-const { nextSibling, previousSibling } = getters(NP);
-export { nextSibling, previousSibling };
+const nextSibling = getOwnPropertyDescriptor(NP, 'nextSibling').get;
 
 export const asChildNodes = ({ start, end }) => {
   const nodes = [];

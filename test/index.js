@@ -116,4 +116,7 @@ range.setEndAfter(childNodes[4]);
 const anHRGroup = range.groupNodes();
 console.assert({}.toString.call(anHRGroup) === '[object GroupNodes<HR>]');
 
-console.log(anHRGroup.nodeName);
+console.assert(anHRGroup.nodeName === '#group-nodes');
+
+document.body.replaceChildren(document.createTextNode('<GroupNodes /> 🥳'));
+document.body.classList.add('done');

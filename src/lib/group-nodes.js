@@ -1,27 +1,22 @@
 //@ts-check
 
 import {
-  DFP,
   asChildNodes,
   asContent,
+  asNodeList,
   comments,
   attached,
-  setPrototypeOf,
   detach,
   helper,
-  nextSibling,
-  previousSibling,
   appendChild,
   insertBefore,
   removeChild,
   replaceChild,
+  replaceChildren,
   start,
 } from './utils.js';
 
-const NLP = NodeList.prototype;
-
 const owned = new WeakSet;
-const { replaceChildren } = DFP;
 
 const apprepend = (children, target) => {
   const { parentNode } = target;
@@ -61,12 +56,6 @@ const validate = ({ data, nodeType }, valid) => {
   if (nodeType !== 8 || data !== valid)
     throw new Error('Invalid GroupNodes boundary');
 };
-
-/**
- * @param {Node[]} nodes
- * @returns {NodeList}
- */
-const asNodeList = nodes => setPrototypeOf(nodes, NLP);
 
 /**
  * @template T
@@ -178,7 +167,7 @@ export class GroupNodes extends DocumentFragment {
   get firstChild() {
     const nodes = comments.get(this);
     if (attached(nodes)) {
-      const next = nextSibling.call(nodes.start);
+      const next = nodes.start.nextSibling;
       return next === nodes.end ? null : next;
     }
     return super.firstChild;
@@ -202,7 +191,7 @@ export class GroupNodes extends DocumentFragment {
   get lastChild() {
     const nodes = comments.get(this);
     if (attached(nodes)) {
-      const prev = previousSibling.call(nodes.end);
+      const prev = nodes.end.previousSibling;
       return prev === nodes.start ? null : prev;
     }
     return super.lastChild;
@@ -221,7 +210,7 @@ export class GroupNodes extends DocumentFragment {
   get nextSibling() {
     const nodes = comments.get(this);
     return attached(nodes) ?
-      nextSibling.call(nodes.end) :
+      nodes.end.nextSibling :
       super.nextSibling
     ;
   }
@@ -245,7 +234,7 @@ export class GroupNodes extends DocumentFragment {
   get previousSibling() {
     const nodes = comments.get(this);
     return attached(nodes) ?
-      previousSibling.call(nodes.start) :
+      nodes.start.previousSibling :
       super.previousSibling
     ;
   }
@@ -273,7 +262,7 @@ export class GroupNodes extends DocumentFragment {
   /** @type {typeof DocumentFragment.prototype.cloneNode} */
   cloneNode(deep = false) {
     //@ts-ignore
-    const clone = new this.constructor();
+    const clone = new this.constructor(this.#name);
     for (const node of this.childNodes)
       appendChild.call(clone, node.cloneNode(deep));
     return clone;
@@ -306,7 +295,7 @@ export class GroupNodes extends DocumentFragment {
   hasChildNodes() {
     const nodes = comments.get(this);
     return attached(nodes) ?
-      (nextSibling.call(nodes.start) !== nodes.end) :
+      (nodes.start.nextSibling !== nodes.end) :
       super.hasChildNodes()
     ;
   }
@@ -370,7 +359,7 @@ export class GroupNodes extends DocumentFragment {
   /** @type {typeof DocumentFragment.prototype.prepend} */
   prepend(...children) {
     const nodes = comments.get(this);
-    if (attached(nodes)) apprepend(asChildren(children, true), nextSibling.call(nodes.start));
+    if (attached(nodes)) apprepend(asChildren(children, true), nodes.start.nextSibling);
     else super.prepend(...children);
   }
   querySelector(selectors) {
