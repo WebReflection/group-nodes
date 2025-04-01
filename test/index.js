@@ -115,3 +115,5 @@ range.setEndAfter(childNodes[4]);
 
 const anHRGroup = range.groupNodes();
 console.assert({}.toString.call(anHRGroup) === '[object GroupNodes<HR>]');
+
+console.log(anHRGroup.nodeName);

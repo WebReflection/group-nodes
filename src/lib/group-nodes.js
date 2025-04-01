@@ -251,13 +251,15 @@ export class GroupNodes extends DocumentFragment {
   }
 
   // TBD: should this be different from #document-fragment?
-  // get nodeName() { return super.nodeName }
+  get nodeName() { return '#group-nodes' }
   // TBD: should this be different from 11?
   // get nodeType() { return super.nodeType }
   // TBD: what should this do?
   // get nodeValue() { return null }
   // TBD: what should this do?
   // get textContent() { return '' }
+  // TBD: do we want/need this?
+  get name() { return this.#name }
 
   // Node mutation methods
   /** @type {typeof DocumentFragment.prototype.appendChild} */
