@@ -1,5 +1,7 @@
 import { GroupNodes } from '../src/index.js';
 
+globalThis.GroupNodes = GroupNodes;
+
 const assert = ok => {
   if (!ok) throw new Error('not OK');
 };

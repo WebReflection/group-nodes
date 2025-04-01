@@ -7,6 +7,7 @@ import {
   comments,
   attached,
   detach,
+  groups,
   helper,
   appendChild,
   insertBefore,
@@ -132,6 +133,7 @@ class GroupNodes extends DocumentFragment {
     //@ts-ignore
     super().#name = name;
     comments.set(this, fromBoundaries || boundaries(start, end));
+    if (!groups.has(name)) groups.set(name, new WeakRef(this));
   }
 
   // accessors

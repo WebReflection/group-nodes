@@ -6,6 +6,9 @@ import { GroupNodes } from '../lib/group-nodes.js';
 if (!patched) {
   defineProperties(Range.prototype, {
     groupNodes: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
       value() {
         const { commonAncestorContainer, startOffset, endOffset } = this;
         const { childNodes } = commonAncestorContainer;

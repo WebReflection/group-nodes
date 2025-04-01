@@ -28,6 +28,10 @@ const { append, moveBefore, prepend, replaceChildren } = DFP;
 export { append, moveBefore, prepend, replaceChildren };
 
 export const comments = new WeakMap;
+
+/** @type {Map<string|symbol,WeakRef>} */
+export const groups = new Map;
+
 export const helper = document.createComment('');
 
 const nextSibling = getOwnPropertyDescriptor(NP, 'nextSibling').get;
