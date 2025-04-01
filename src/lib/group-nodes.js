@@ -103,7 +103,12 @@ export const asChildren = (children, patch = false) => {
  */
 export const asTarget = node => isGroupNodes(node) ? start(node) : node;
 
+
+let fromBoundaries = null;
+
 export class GroupNodes extends DocumentFragment {
+  #name = '';
+
   /**
    * ℹ️ hydration related
    * Create a GroupNodes reference from 2 live comments as long
@@ -111,40 +116,36 @@ export class GroupNodes extends DocumentFragment {
    * Reason: GroupNodes should be unique just like ShadowRoots per each node.
    * @param {Comment} start
    * @param {Comment} end
-   * @param {string} name
    * @returns {GroupNodes}
    */
-  static from(start, end, name = '') {
+  static from(start, end) {
+    const name = start.data.slice(1, -1);
     validate(start, `<${name}>`);
     validate(end, `</${name}>`);
     if (owned.has(start) || owned.has(end))
       throw new Error('Boundaries can be used only once per GroupNodes');
     const nodes = boundaries(start, end);
     attached(nodes);
-    owned.add(start).add(end);
-    const groupNodes = setPrototypeOf(
-      document.createDocumentFragment(),
-      this.prototype
-    );
-    comments.set(groupNodes, nodes);
-    return groupNodes;
+    fromBoundaries = nodes;
+    return new this(name);
   }
 
   /**
    * @param {string} name the group name
    */
   constructor(name = '') {
-    const start = document.createComment(`<${name}>`);
-    const end = document.createComment(`</${name}>`);
+    const start = fromBoundaries?.start || document.createComment(`<${name}>`);
+    const end = fromBoundaries?.end || document.createComment(`</${name}>`);
     owned.add(start).add(end);
     //@ts-ignore
-    super().name = name;
-    comments.set(this, boundaries(start, end));
+    super().#name = name;
+    comments.set(this, fromBoundaries || boundaries(start, end));
+    fromBoundaries = null;
   }
 
   // accessors
   get [Symbol.toStringTag]() {
-    return `GroupNodes<${this.name}>`;
+    return `GroupNodes<${this.#name}>`;
   }
 
   /** @type {number} */

@@ -93,8 +93,25 @@ console.assert(document.body.outerHTML === '<body><!--<>--><!--<>--><!--<>--><p>
 document.body.replaceChildren(hydrated, clone, another);
 console.assert(document.body.outerHTML === '<body><!--<>--><!--</>--><!--<>--><p>!</p><!--</>--><!--<>--><!--</>--></body>');
 
-console.log(
-  {}.toString.call(
-    document.body.appendChild(new GroupNodes('MyGroup'))
-  )
-);
+const named = new GroupNodes('Named');
+named.appendChild(document.createElement('hr'));
+
+console.assert({}.toString.call(document.body.appendChild(named)) === '[object GroupNodes<Named>]');
+
+document.body.innerHTML = '<!--<>--><!--</>--><!--<HR>--><hr><!--</HR>-->';
+
+const { childNodes } = document.body;
+
+const range = document.createRange();
+range.setStartBefore(childNodes[0]);
+range.setEndAfter(childNodes[1]);
+
+const aGroupHasNoName = range.groupNodes();
+console.assert({}.toString.call(aGroupHasNoName) === '[object GroupNodes<>]');
+
+
+range.setStartBefore(childNodes[2]);
+range.setEndAfter(childNodes[4]);
+
+const anHRGroup = range.groupNodes();
+console.assert({}.toString.call(anHRGroup) === '[object GroupNodes<HR>]');
