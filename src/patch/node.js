@@ -12,9 +12,9 @@ import {
   insertBefore,
   removeChild,
   replaceChild,
-} from './utils.js';
+} from '../lib/utils.js';
 
-import { asGroupNodes, asTarget, isGroupNodes } from './group-nodes.js';
+import { asGroupNodes, asTarget, isGroupNodes } from '../lib/group-nodes.js';
 
 defineProperties(NP, {
   appendChild: {

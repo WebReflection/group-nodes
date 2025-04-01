@@ -92,3 +92,9 @@ console.assert(document.body.outerHTML === '<body><!--<>--><!--<>--><!--<>--><p>
 
 document.body.replaceChildren(hydrated, clone, another);
 console.assert(document.body.outerHTML === '<body><!--<>--><!--</>--><!--<>--><p>!</p><!--</>--><!--<>--><!--</>--></body>');
+
+console.log(
+  {}.toString.call(
+    document.body.appendChild(new GroupNodes('MyGroup'))
+  )
+);

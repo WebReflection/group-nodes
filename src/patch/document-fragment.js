@@ -7,9 +7,9 @@ import {
   moveBefore,
   prepend,
   replaceChildren,
-} from './utils.js';
+} from '../lib/utils.js';
 
-import { asGroupNodes, asChildren, asTarget } from './group-nodes.js';
+import { asGroupNodes, asChildren, asTarget } from '../lib/group-nodes.js';
 
 defineProperties(DFP, {
   append: {

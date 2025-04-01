@@ -1,8 +1,8 @@
 //@ts-check
 
-import { defineProperties } from './utils.js';
+import { defineProperties } from '../lib/utils.js';
 
-import { asChildren } from './group-nodes.js';
+import { asChildren } from '../lib/group-nodes.js';
 
 const CDP = CharacterData.prototype;
 

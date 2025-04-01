@@ -1,11 +1,15 @@
 {
   "name": "@webreflection/group-nodes",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "exports": {
     ".": "./src/index.js",
     "./package.json": "./package.json"
   },
+  "files": [
+    "./src/*",
+    "README.md"
+  ],
   "description": "A DocumentPersistentFragment alternative, solely based on a weak relation between a fragment and its comments' boundaries",
   "main": "./src/index.js",
   "module": "./src/index.js",
