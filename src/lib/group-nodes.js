@@ -127,7 +127,8 @@ export class GroupNodes extends DocumentFragment {
     const nodes = boundaries(start, end);
     attached(nodes);
     fromBoundaries = nodes;
-    return new this(name);
+    try { return new this(name) }
+    finally { fromBoundaries = null }
   }
 
   /**
@@ -140,7 +141,6 @@ export class GroupNodes extends DocumentFragment {
     //@ts-ignore
     super().#name = name;
     comments.set(this, fromBoundaries || boundaries(start, end));
-    fromBoundaries = null;
   }
 
   // accessors
