@@ -46,7 +46,7 @@ if (!patched) {
     },
     moveBefore: {
       /**
-       * @template {Node} T
+       * @template T
        * @param {T} movedNode
        * @param {Node | null} referenceNode
        * @returns {T}

@@ -114,7 +114,7 @@ range.setEndAfter(childNodes[1]);
 
 const aGroupHasNoName = range.groupNodes();
 assert({}.toString.call(aGroupHasNoName) === '[object GroupNodes<>]');
-
+assert(document.groups[''] === null);
 
 range.setStartBefore(childNodes[2]);
 range.setEndAfter(childNodes[4]);
@@ -122,7 +122,15 @@ range.setEndAfter(childNodes[4]);
 const anHRGroup = range.groupNodes();
 assert({}.toString.call(anHRGroup) === '[object GroupNodes<HR>]');
 
+assert(document.groups.HR === anHRGroup);
+
 assert(anHRGroup.nodeName === '#group-nodes');
+
+document.body.innerHTML = 'a<!--<test>-->b<!--</test>-->c';
+assert(document.groups.test instanceof GroupNodes);
+
+document.groups.test.appendChild(document.createTextNode('!'));
+assert(document.body.innerHTML === 'a<!--<test>-->b!<!--</test>-->c');
 
 document.body.replaceChildren(document.createTextNode('<GroupNodes /> 🥳'));
 document.body.classList.add('done');

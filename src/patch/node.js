@@ -46,6 +46,7 @@ if (!patched) {
     removeChild: {
       /** @type {typeof Node.prototype.removeChild} */
       value(child) {
+        //@ts-ignore
         return isGroupNodes(child) ? detach(child) : removeChild.call(this, child);
       }
     },
@@ -53,7 +54,9 @@ if (!patched) {
       /** @type {typeof Node.prototype.replaceChild} */
       value(node, child) {
         if (isGroupNodes(child)) {
+          //@ts-ignore
           insertBefore.call(this, helper, start(child));
+          //@ts-ignore
           detach(child);
           //@ts-ignore
           child = helper;

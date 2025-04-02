@@ -3,6 +3,8 @@
 import { defineProperties, groups, patched } from '../lib/utils.js';
 import { GroupNodes } from '../lib/group-nodes.js';
 
+/** @typedef {import("../lib/group-nodes.js").IGroupNodes} IGroupNodes */
+
 if (!patched) {
   defineProperties(document, {
     groups: {
@@ -14,29 +16,38 @@ if (!patched) {
           return map.has(name) || !!this.get(map, name);
         },
         get(map, name) {
-          let group = map.get(name)?.deref(), parentNode, start, end, node;
-          if (group) return group;
+          let group = map.get(name)?.deref() || null;
           name = String(name);
-          const tw = document.createTreeWalker(document.body, 128);
-          const startName = `<${name}>`;
-          const endName = `</${name}>`;
-          while ((node = tw.nextNode())) {
-            if (start) {
+          if (!group && name) {
+            const tw = document.createTreeWalker(document.body, 128);
+            const startName = `<${name}>`;
+            const endName = `</${name}>`;
+            let parentNode, start, end, node;
+            while ((node = tw.nextNode())) {
+              if (start) {
+                //@ts-ignore
+                if (node.data === endName && node.parentNode === parentNode) {
+                  end = node;
+                  break;
+                }
+              }
               //@ts-ignore
-              if (node.data === endName && node.parentNode === parentNode) {
-                end = node;
-                break;
+              else if (node.data === startName) {
+                start = node;
+                parentNode = start.parentNode;
               }
             }
-            //@ts-ignore
-            else if (node.data === startName) {
-              start = node;
-              parentNode = start.parentNode;
+            if (start) {
+              if (end) {
+                group = GroupNodes.from(
+                  /** @type {Comment} */(start),
+                  /** @type {Comment} */(end),
+                );
+              }
+              else {
+                throw new Error(`Invalid ${name} boundaries`);
+              }
             }
-          }
-          if (start && end) {
-            group = GroupNodes.from(start, end);
-            map.set(name, new WeakRef(group));
           }
           return group;
         }

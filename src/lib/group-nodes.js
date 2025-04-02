@@ -4,7 +4,7 @@ import {
   asChildNodes,
   asContent,
   asNodeList,
-  comments,
+  fragments,
   attached,
   detach,
   groups,
@@ -19,8 +19,6 @@ import {
   patched,
 } from './utils.js';
 
-const owned = new WeakSet;
-
 const apprepend = (children, target) => {
   const { parentNode } = target;
   insertBefore.call(parentNode, helper, target);
@@ -29,18 +27,30 @@ const apprepend = (children, target) => {
   removeChild.call(parentNode, helper);
 };
 
-/**
- * @param {Comment} start
- * @param {Comment} end
- * @returns
- */
-const boundaries = (start, end) => ({ start, end });
+/** @typedef {Boundaries} IBoundaries */
+
+class Boundaries {
+  /**
+   * @param {Comment} start
+   * @param {Comment} end
+   */
+  constructor(start, end) {
+    this.start = start;
+    this.end = end;
+  }
+}
 
 /**
- * @param {Node} node
+ * @param {Node|Comment|Element|IGroupNodes} node
  * @returns
  */
 const children = ({ nodeType }) => nodeType === 1;
+
+/**
+ * @param {IBoundaries} boundaries
+ * @returns
+ */
+const hasChildNodes = ({ start, end }) => start.nextSibling !== end;
 
 /**
  * @param {{ start: Comment, end: Comment }} comment
@@ -63,26 +73,29 @@ const validate = ({ data, nodeType }, valid) => {
 /**
  * @template T
  * @param {T} node
- * @returns {T is GroupNodes}
+ * @returns {T is IGroupNodes}
  */
 export const isGroupNodes = node => node instanceof GroupNodes;
 
 /**
- * @template {Node | GroupNodes} T
+ * @template T
  * @param {T} node
- * @returns {T}
+ * @returns
  */
-export const asGroupNodes = node => isGroupNodes(node) ? asContent(node) : node;
+export const asGroupNodes = node => isGroupNodes(node) ?
+  asContent(/** @type {IGroupNodes} */(node)) :
+  node
+;
 
 /**
- * @param {(string | Node)[]} children
+ * @param {(string|Node|IGroupNodes)[]} children
  * @param {boolean} [patch=false]
  * @returns
  */
 export const asChildren = (children, patch = false) => {
   for (let i = 0; i < children.length; i++) {
     if (isGroupNodes(children[i]))
-      children[i] = asContent(children[i]);
+      children[i] = asContent(/** @type {IGroupNodes} */(children[i]));
     else if (patch)
       children[i] = document.createTextNode(/** @type {string} */(children[i]));
   }
@@ -90,13 +103,20 @@ export const asChildren = (children, patch = false) => {
 };
 
 /**
- * @param {Node?} node
+ * @param {(Node|IGroupNodes)?} node
  * @returns {Node?}
  */
-export const asTarget = node => isGroupNodes(node) ? start(node) : node;
+export const asTarget = node => isGroupNodes(node) ?
+  start(/** @type {IGroupNodes} */(node)) :
+  /** @type {Node?} */(node)
+;
 
+/** @type {WeakMap<Comment, WeakRef<IGroupNodes>>} */
+const references = new WeakMap;
 
-let fromBoundaries = null;
+let fromComments = null;
+
+/** @typedef {GroupNodes} IGroupNodes */
 
 class GroupNodes extends DocumentFragment {
   #name = '';
@@ -108,32 +128,40 @@ class GroupNodes extends DocumentFragment {
    * Reason: GroupNodes should be unique just like ShadowRoots per each node.
    * @param {Comment} start
    * @param {Comment} end
-   * @returns {GroupNodes}
+   * @returns {IGroupNodes}
    */
   static from(start, end) {
     const name = start.data.slice(1, -1);
     validate(start, `<${name}>`);
     validate(end, `</${name}>`);
-    if (owned.has(start) || owned.has(end))
+    // TBD: should this throw or should it return the same group?
+    if (references.has(start) || references.has(end))
       throw new Error('Boundaries can be used only once per GroupNodes');
-    const nodes = boundaries(start, end);
-    attached(nodes);
-    fromBoundaries = nodes;
+    const comments = new Boundaries(start, end);
+    attached(comments);
+    fromComments = comments;
     try { return new this(name) }
-    finally { fromBoundaries = null }
+    finally { fromComments = null }
   }
 
   /**
    * @param {string} name the group name
    */
   constructor(name = '') {
-    const start = fromBoundaries?.start || document.createComment(`<${name}>`);
-    const end = fromBoundaries?.end || document.createComment(`</${name}>`);
-    owned.add(start).add(end);
     //@ts-ignore
     super().#name = name;
-    comments.set(this, fromBoundaries || boundaries(start, end));
-    if (!groups.has(name)) groups.set(name, new WeakRef(this));
+
+    const comments = fromComments || new Boundaries(
+      document.createComment(`<${name}>`),
+      document.createComment(`</${name}>`),
+    );
+    fragments.set(this, comments);
+
+    const ref = new WeakRef(this);
+    references.set(comments.start, ref);
+    references.set(comments.end, ref);
+
+    if (name && !groups.has(name)) groups.set(name, ref);
   }
 
   // accessors
@@ -143,102 +171,103 @@ class GroupNodes extends DocumentFragment {
 
   /** @type {number} */
   get childElementCount() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      asChildNodes(nodes).filter(children).length :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      asChildNodes(comments).filter(children).length :
       super.childElementCount
     ;
   }
 
   //@ts-ignore
   get childNodes() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      asNodeList(asChildNodes(nodes)) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      asNodeList(asChildNodes(comments)) :
       super.childNodes
     ;
   }
   //@ts-ignore
   get children() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      asNodeList(asChildNodes(nodes).filter(children)) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      asNodeList(asChildNodes(comments).filter(children)) :
       super.children
     ;
   }
 
   /** @type {ChildNode?} */
   get firstChild() {
-    const nodes = comments.get(this);
-    if (attached(nodes)) {
-      const next = nodes.start.nextSibling;
-      return next === nodes.end ? null : next;
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments)) {
+      const next = comments.start.nextSibling;
+      return next === comments.end ? null : next;
     }
     return super.firstChild;
   }
 
   /** @type {Element?} */
   get firstElementChild() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      (asChildNodes(nodes).find(children) || null) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      //@ts-ignore
+      (asChildNodes(comments).find(children) || null) :
       super.firstElementChild
     ;
   }
 
   /** @type {boolean} */
   get isConnected() {
-    return comments.get(this).start.isConnected;
+    return /** @type {IBoundaries} */(fragments.get(this)).start.isConnected;
   }
 
   /** @type {ChildNode?} */
   get lastChild() {
-    const nodes = comments.get(this);
-    if (attached(nodes)) {
-      const prev = nodes.end.previousSibling;
-      return prev === nodes.start ? null : prev;
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments)) {
+      const prev = comments.end.previousSibling;
+      return prev === comments.start ? null : prev;
     }
     return super.lastChild;
   }
 
   /** @type {Element?} */
   get lastElementChild() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
       //@ts-ignore
-      (asChildNodes(nodes).findLast(children) || null) :
+      (asChildNodes(comments).findLast(children) || null) :
       super.lastElementChild
     ;
   }
 
   get nextSibling() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      nodes.end.nextSibling :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      comments.end.nextSibling :
       super.nextSibling
     ;
   }
 
   get parentElement() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      nodes.start.parentElement :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      comments.start.parentElement :
       super.parentElement
     ;
   }
 
   get parentNode() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      nodes.start.parentNode :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      comments.start.parentNode :
       super.parentNode
     ;
   }
 
   get previousSibling() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      nodes.start.previousSibling :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      comments.start.previousSibling :
       super.previousSibling
     ;
   }
@@ -257,9 +286,9 @@ class GroupNodes extends DocumentFragment {
   // Node mutation methods
   /** @type {typeof DocumentFragment.prototype.appendChild} */
   appendChild(child) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      parent(nodes, 'appendChild', child) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      parent(comments, 'insertBefore', child, comments.end) :
       super.appendChild(child)
     ;
   }
@@ -273,61 +302,62 @@ class GroupNodes extends DocumentFragment {
   }
   /** @type {typeof DocumentFragment.prototype.compareDocumentPosition} */
   compareDocumentPosition(other) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      parent(nodes, 'compareDocumentPosition', other) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      parent(comments, 'compareDocumentPosition', other) :
       super.compareDocumentPosition(/** @type {Node} */(asTarget(other)))
     ;
   }
   /** @type {typeof DocumentFragment.prototype.contains} */
   contains(child) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      parent(nodes, 'contains', child) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      parent(comments, 'contains', child) :
       super.contains(asTarget(child))
     ;
   }
   /** @type {typeof DocumentFragment.prototype.getRootNode} */
   getRootNode(...args) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      nodes.start.getRootNode(...args) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      comments.start.getRootNode(...args) :
       super.getRootNode(...args)
     ;
   }
   /** @type {typeof DocumentFragment.prototype.hasChildNodes} */
   hasChildNodes() {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      (nodes.start.nextSibling !== nodes.end) :
-      super.hasChildNodes()
-    ;
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ? hasChildNodes(comments) : super.hasChildNodes();
   }
   /** @type {typeof DocumentFragment.prototype.insertBefore} */
   insertBefore(newNode, referenceNode) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      parent(nodes, 'insertBefore', newNode, referenceNode) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      parent(comments, 'insertBefore', newNode, referenceNode) :
+      //@ts-ignore
       super.insertBefore(asGroupNodes(newNode), asTarget(referenceNode))
     ;
   }
   /** @type {typeof DocumentFragment.prototype.removeChild} */
   removeChild(child) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      parent(nodes, 'removeChild', child) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      parent(comments, 'removeChild', child) :
       (isGroupNodes(child) ?
+        //@ts-ignore
         detach(child) :
         super.removeChild(child))
     ;
   }
   /** @type {typeof DocumentFragment.prototype.replaceChild} */
   replaceChild(newChild, oldChild) {
-    const nodes = comments.get(this);
-    if (attached(nodes))
-      return parent(nodes, 'replaceChild', newChild, oldChild);
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments))
+      return parent(comments, 'replaceChild', newChild, oldChild);
     if (isGroupNodes(oldChild)) {
+      //@ts-ignore
       insertBefore.call(this, helper, start(oldChild));
+      //@ts-ignore
       detach(oldChild);
       //@ts-ignore
       oldChild = helper;
@@ -340,60 +370,74 @@ class GroupNodes extends DocumentFragment {
   // DocumentFragment mutation methods
   /** @type {typeof DocumentFragment.prototype.append} */
   append(...children) {
-    const nodes = comments.get(this);
-    if (attached(nodes)) apprepend(asChildren(children, true), nodes.end);
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments)) apprepend(asChildren(children, true), comments.end);
     else super.append(...children);
   }
   /** @type {typeof DocumentFragment.prototype.getElementById} */
   getElementById(id) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      parent(nodes, 'getElementById', id) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      parent(comments, 'getElementById', id) :
       super.getElementById(id)
     ;
   }
-  moveBefore(newNode, referenceNode) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      parent(nodes, 'moveBefore', newNode, referenceNode) :
+  /**
+   * @template T
+   * @param {T} movedNode
+   * @param {Node | null} referenceNode
+   * @returns {T}
+   */
+  moveBefore(movedNode, referenceNode) {
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      parent(comments, 'moveBefore', movedNode, referenceNode) :
       //@ts-ignore
-      super.moveBefore(newNode, referenceNode)
+      super.moveBefore(movedNode, referenceNode)
     ;
   }
   /** @type {typeof DocumentFragment.prototype.prepend} */
   prepend(...children) {
-    const nodes = comments.get(this);
-    if (attached(nodes)) apprepend(asChildren(children, true), nodes.start.nextSibling);
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments)) apprepend(asChildren(children, true), comments.start.nextSibling);
     else super.prepend(...children);
   }
   querySelector(selectors) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      (asChildNodes(nodes).find(node => node.matches?.(selectors)) || null) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      //@ts-ignore
+      (asChildNodes(comments).find(node => node.matches?.(selectors)) || null) :
       super.querySelector(selectors)
     ;
   }
   querySelectorAll(selectors) {
-    const nodes = comments.get(this);
-    return attached(nodes) ?
-      asChildNodes(nodes).filter(node => node.matches?.(selectors)) :
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    return attached(comments) ?
+      //@ts-ignore
+      asChildNodes(comments).filter(node => node.matches?.(selectors)) :
       super.querySelector(selectors)
     ;
   }
   /** @type {typeof DocumentFragment.prototype.replaceChildren} */
   replaceChildren(...children) {
-    const nodes = comments.get(this);
-    if (attached(nodes)) {
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments)) {
       for (let i = 0; i < children.length; i++) {
-        if (isGroupNodes(children[i]))
+        if (isGroupNodes(children[i])) {
+          //@ts-ignore
           children[i] = asContent(children[i]);
+        }
       }
-      const range = document.createRange();
-      range.setStartAfter(nodes.start);
-      range.setEndBefore(nodes.end);
-      range.deleteContents();
       replaceChildren.apply(this, children);
-      insertBefore.call(nodes.end.parentNode, this, nodes.end);
+      if (hasChildNodes(comments)) {
+        const range = document.createRange();
+        range.setStartAfter(comments.start);
+        range.setEndBefore(comments.end);
+        range.deleteContents();
+      }
+      if (children.length) {
+        insertBefore.call(comments.end.parentNode, this, comments.end);
+      }
     }
     else super.replaceChildren(...children);
   }
@@ -401,32 +445,35 @@ class GroupNodes extends DocumentFragment {
   // Extra (convenient) methods
   /** @type {typeof Element.prototype.after} */
   after(...children) {
-    const nodes = comments.get(this);
-    if (attached(nodes))
-      nodes.end.after(...children);
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments))
+      comments.end.after(...children);
   }
   /** @type {typeof Element.prototype.before} */
   before(...children) {
-    const nodes = comments.get(this);
-    if (attached(nodes))
-      nodes.start.before(...children);
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    if (attached(comments))
+      comments.start.before(...children);
   }
   /** @type {typeof Element.prototype.remove} */
   remove() {
+    //@ts-ignore
     this.parentNode?.removeChild(this);
   }
   /** @type {typeof Element.prototype.replaceWith} */
   replaceWith(...children) {
-    const nodes = comments.get(this);
-    const { parentNode } = nodes.start;
+    const comments = /** @type {IBoundaries} */(fragments.get(this));
+    const { parentNode } = comments.start;
     if (parentNode) {
-      insertBefore.call(parentNode, helper, nodes.start);
-      detach(this, nodes);
+      insertBefore.call(parentNode, helper, comments.start);
+      detach(this, comments);
       helper.replaceWith(...children);
     }
   }
 }
 
-const GN = patched ? globalThis[symbol] : (globalThis[symbol] = GroupNodes);
+const GN = /** @type {typeof GroupNodes} */(
+  patched ? globalThis[symbol] : (globalThis[symbol] = GroupNodes)
+);
 
 export { GN as GroupNodes };
