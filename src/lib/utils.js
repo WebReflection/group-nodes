@@ -31,7 +31,7 @@ const { append, moveBefore, prepend, replaceChildren } = DFP;
 export { append, moveBefore, prepend, replaceChildren };
 
 /** @type {WeakMap<IGroupNodes,IBoundaries>} */
-export const fragments = new WeakMap;
+export const boundaries = new WeakMap;
 
 /** @type {Map<string | symbol, WeakRef<IGroupNodes>>} */
 export const groups = new Map;
@@ -52,21 +52,21 @@ export const asChildNodes = ({ start, end }) => {
 
 /**
  * @param {IGroupNodes} groupNodes
- * @param {IBoundaries} [boundaries]
+ * @param {IBoundaries} [comments]
  * @returns
  */
-export const asContent = (groupNodes, boundaries = fragments.get(groupNodes)) => {
-  if (attached(boundaries)) {
+export const asContent = (groupNodes, comments = boundaries.get(groupNodes)) => {
+  if (attached(comments)) {
     replaceChildren.call(
       groupNodes,
-      boundaries.start,
-      ...asChildNodes(boundaries),
-      boundaries.end,
+      comments.start,
+      ...asChildNodes(comments),
+      comments.end,
     );
   }
   else {
-    prepend.call(groupNodes, boundaries.start);
-    append.call(groupNodes, boundaries.end);
+    prepend.call(groupNodes, comments.start);
+    append.call(groupNodes, comments.end);
   }
   return groupNodes;
 };
@@ -82,26 +82,30 @@ export const attached = ({ start, end }) => {
     parentNode !== end.parentNode ||
     (result && compareDocumentPosition.call(start, end) !== 4)
   ) {
-    throw new RangeError('Invalid GroupNodes boundaries');
+    invalidBoundaries();
   }
   return result;
 };
 
 /**
  * @param {IGroupNodes} groupNodes
- * @param {IBoundaries} [boundaries]
+ * @param {IBoundaries} [comments]
  * @returns
  */
-export const detach = (groupNodes, boundaries = fragments.get(groupNodes)) => {
-  const childNodes = asChildNodes(boundaries);
-  boundaries.start.remove();
+export const detach = (groupNodes, comments = boundaries.get(groupNodes)) => {
+  const childNodes = asChildNodes(comments);
+  comments.start.remove();
   replaceChildren.apply(groupNodes, childNodes);
-  boundaries.end.remove();
+  comments.end.remove();
   return groupNodes;
+};
+
+export const invalidBoundaries = () => {
+  throw new Error('Invalid GroupNodes boundary');
 };
 
 /**
  * @param {IGroupNodes} groupNodes
  * @returns {Comment}
  */
-export const start = groupNodes => fragments.get(groupNodes).start;
+export const start = groupNodes => boundaries.get(groupNodes).start;

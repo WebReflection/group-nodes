@@ -1,6 +1,6 @@
 //@ts-check
 
-import { defineProperties, groups, patched } from '../lib/utils.js';
+import { defineProperties, invalidBoundaries, groups, patched } from '../lib/utils.js';
 import { GroupNodes } from '../lib/group-nodes.js';
 
 /** @typedef {import("../lib/group-nodes.js").IGroupNodes} IGroupNodes */
@@ -45,7 +45,7 @@ if (!patched) {
                 );
               }
               else {
-                throw new Error(`Invalid ${name} boundaries`);
+                invalidBoundaries();
               }
             }
           }
