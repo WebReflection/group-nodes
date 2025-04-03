@@ -122,6 +122,7 @@ let fromComments = null;
 class GroupNodes extends DocumentFragment {
   #name = '';
 
+  // TBD: I am not sure I like this, I prefer just `document.groups`
   /**
    * ℹ️ hydration related
    * Create a GroupNodes reference from 2 live comments as long
@@ -211,6 +212,7 @@ class GroupNodes extends DocumentFragment {
   /** @type {Element?} */
   get firstElementChild() {
     const comments = /** @type {IBoundaries} */(boundaries.get(this));
+    //@ts-ignore
     return attached(comments) ?
       //@ts-ignore
       (asChildNodes(comments).find(children) || null) :

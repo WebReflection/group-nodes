@@ -5,6 +5,7 @@ import { GroupNodes } from '../lib/group-nodes.js';
 
 if (!patched) {
   defineProperties(Range.prototype, {
+    // TBD: I am not sure I like this, I prefer just `document.groups`
     groupNodes: {
       configurable: true,
       enumerable: true,
